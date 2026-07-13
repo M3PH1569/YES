@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>M3PH1569 IS HERE!!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* VS Code Dark+ Color Palette */
+            --bg-color: #1e1e1e; 
+            --text-color: #d4d4d4; 
+            --prompt-color: #4ec9b0; 
+            --keyword-color: #569cd6; 
+            --string-color: #ce9178; 
+            --comment-color: #6a9955; 
+            --function-color: #dcdcaa; 
+            --variable-color: #9cdcfe; 
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            background-color: #050505; 
+            color: var(--text-color);
+            font-family: 'Fira Code', Consolas, 'Courier New', monospace;
+            overflow: hidden;
+        }
+
+        /* Matrix Digital Rain Background */
+        #matrixCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+            opacity: 0.15;
+        }
+
+        /* Main Content */
+        #mainContent {
+            display: flex;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        .profile-pic {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--prompt-color);
+            box-shadow: 0 0 15px rgba(78, 201, 176, 0.5);
+            margin-bottom: 10px;
+            z-index: 10;
+        }
+
+        /* Glitch Effect on Header */
+        .title {
+            font-family: 'Fira Code', monospace;
+            font-size: 1.5rem;
+            margin: 0 0 20px 0;
+            color: var(--prompt-color);
+            text-shadow: 0 0 8px rgba(78, 201, 176, 0.8);
+            letter-spacing: 3px;
+            z-index: 10;
+            animation: glitchText 4s infinite;
+        }
+
+        @keyframes glitchText {
+            0%, 94% { text-shadow: 0 0 8px rgba(78, 201, 176, 0.8); color: var(--prompt-color); transform: none; }
+            95% { text-shadow: -3px 0 red, 3px 0 blue; color: white; transform: skewX(-15deg); }
+            96% { text-shadow: 3px 0 red, -3px 0 blue; color: white; transform: skewX(15deg); }
+            97% { text-shadow: 0 0 8px rgba(78, 201, 176, 0.8); color: var(--prompt-color); transform: none; }
+        }
+
+        /* Scanlines overlay */
+        .scanlines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
+            background-size: 100% 4px;
+            z-index: 50;
+            pointer-events: none;
+            opacity: 0.5;
+        }
+
+        .terminal {
+            display: flex;
+            flex-direction: column;
+            width: 90%;
+            max-width: 850px;
+            height: 480px; 
+            background-color: rgba(15, 15, 15, 0.65);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 12px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.05);
+            z-index: 10;
+            overflow: hidden;
+        }
+
+        .terminal-header-bar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(30, 30, 30, 0.7);
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .terminal-title {
+            color: #aaa;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        .terminal-body {
+            padding: 1.5rem;
+            font-size: 0.95rem; 
+            line-height: 1.6;
+            overflow-y: auto; 
+            flex-grow: 1;
+        }
+
+        .terminal-body::-webkit-scrollbar { width: 8px; }
+        .terminal-body::-webkit-scrollbar-thumb { background: #555; border-radius: 4px; }
+        .terminal-body::-webkit-scrollbar-track { background: transparent; }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            position: absolute;
+            left: 15px;
+        }
+        .window-controls span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+        }
+        .close-btn { background-color: #ff5f56; }
+        .min-btn { background-color: #ffbd2e; }
+        .max-btn { background-color: #27c93f; }
+
+        .header { margin-bottom: 1rem; }
+        .prompt { color: var(--prompt-color); font-weight: 500; }
+        .content { display: inline; }
+
+        /* Syntax Highlighting Classes */
+        .keyword { color: var(--keyword-color); }
+        .string { color: var(--string-color); }
+        .comment { color: var(--comment-color); font-style: italic; }
+        .function { color: var(--function-color); }
+        .variable { color: var(--variable-color); }
+        
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 1.1em;
+            background-color: #d4d4d4;
+            vertical-align: text-bottom;
+            animation: blink 1s step-end infinite;
+            margin-left: 2px;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Matrix Code Rain Background -->
+    <canvas id="matrixCanvas"></canvas>
+
+    <!-- Background Audio Container -->
+    <div style="position: absolute; left: -9999px; top: -9999px;">
+        <div id="audioContainer"></div>
+    </div>
+
+    <div id="mainContent">
+        <div class="scanlines"></div>
+        <img src="./M3PH1569.png" alt="Anonymous" class="profile-pic">
+        <h1 class="title">Hacked By M3PH1569</h1>
+        <div class="terminal">
+            <div class="terminal-header-bar">
+                <div class="window-controls">
+                    <span class="close-btn"></span>
+                    <span class="min-btn"></span>
+                    <span class="max-btn"></span>
+                </div>
+                <div class="terminal-title">root@yes: ~/yesvuln</div>
+            </div>
+            <div class="terminal-body" id="terminalScroll">
+                <div class="header">
+                    <span class="prompt">root@yes:~#</span> ./M3PH1569.js
+                </div>
+                <div id="typewriter" class="content"></div><span class="cursor"></span>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- MATRIX RAIN EFFECT ---
+        const canvas = document.getElementById('matrixCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%\"'#&_(),.;:?!\\|{}<>[]^~";
+        const matrix = letters.split('');
+        
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        
+        const drops = [];
+        for (let x = 0; x < columns; x++) {
+            drops[x] = 1;
+        }
+        
+        function drawMatrix() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.05)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = "#0F0";
+            ctx.font = fontSize + "px 'Fira Code', monospace";
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = matrix[Math.floor(Math.random() * matrix.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 40);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        // --- END MATRIX RAIN ---
+
+        const messages = [
+            "<span class='comment'>// [START] INITIALIZING CONNECTION TO TARGET...</span>",
+            "<span class='comment'>// [OK] BYPASSING FIREWALL...</span>",
+            "<span class='comment'>// [OK] EVADING WAF RULES...</span>",
+            "<span class='comment'>// [OK] GAINING SHELL ACCESS...</span>",
+            "<span class='keyword'>let</span> <span class='variable'>access</span> = <span class='keyword'>true</span>;",
+            "<span class='variable'>target</span> = <span class='string'>'ejurnal.akademifarmasijember.ac.id'</span>;",
+            "--------------------------------------------------",
+            "<span class='comment'>/*</span>",
+            "<span class='comment'> * Greetings, Admin &lt;Administrator&gt;.</span>",
+            "<span class='comment'> * I have successfully penetrated the security of this website.</span>",
+            "<span class='comment'> * This is a demonstration of Web Cache Poisoning (CVE-2022-24181)</span>",
+            "<span class='comment'> * on Open Journal Systems 3.3.0.19.</span>",
+            "<span class='comment'> *</span>",
+            "<span class='comment'> * Rest assured: No data was stolen, modified, or deleted.</span>",
+            "<span class='comment'> * The database remains intact and all records are safe.</span>",
+            "<span class='comment'> * This is merely a proof of security awareness.</span>",
+            "<span class='comment'> */</span>",
+            " ",
+            "<span class='keyword'>Advice</span> <span class='keyword'>for</span> <span class='function'>Developers &amp; Administrators</span>:",
+            "<span class='function'>Fix your</span> <span class='keyword'>X-Forwarded-Host</span> <span class='variable'>trust issue</span>:",
+            "<span class='comment'>// Configure your reverse proxy to strip untrusted headers</span>",
+            "<span class='comment'>// Include X-Forwarded-Host in the cache key (Vary header)</span>",
+            "<span class='comment'>// Or disable caching on dynamic pages entirely</span>",
+            " ",
+            "<span class='comment'>/*</span>",
+            "<span class='comment'> * Security is not a product, but a process.</span>",
+            "<span class='comment'> * This vulnerability was reported to raise awareness.</span>",
+            "<span class='comment'> * Patch your OJS instance to the latest version</span>",
+            "<span class='comment'> * and restrict allowed hosts in config.inc.php.</span>",
+            "<span class='comment'> *</span>",
+            "<span class='comment'> * Special thanks to GOD.</span>",
+            "<span class='comment'> * Keep learning, keep securing.</span>",
+            "<span class='comment'> */</span>",
+            " ",
+            "<span class='function'>That is all.</span> <span class='prompt'>EOF</span>"
+        ];
+
+        const typewriterElement = document.getElementById('typewriter');
+        let messageIndex = 0;
+        let charIndex = 0;
+        let currentTokens = [];
+        let fullHTML = '';
+
+        function type() {
+            if (messageIndex === messages.length) return;
+
+            if (charIndex === 0) {
+                currentTokens = messages[messageIndex].match(/(<[^>]+>|[^<])/g) || [];
+            }
+
+            if (charIndex < currentTokens.length) {
+                fullHTML += currentTokens[charIndex];
+                typewriterElement.innerHTML = fullHTML;
+                charIndex++;
+
+                const terminalBox = document.getElementById('terminalScroll');
+                terminalBox.scrollTop = terminalBox.scrollHeight;
+
+                if (currentTokens[charIndex - 1].startsWith('<')) {
+                    type();
+                    return;
+                }
+
+                const typingSpeed = Math.random() * 15 + 10; 
+                setTimeout(type, typingSpeed);
+            } else {
+                setTimeout(() => {
+                    fullHTML += '<br><span class="prompt">root@yes:~# </span>';
+                    typewriterElement.innerHTML = fullHTML;
+                    messageIndex++;
+                    charIndex = 0;
+                    type();
+                }, 400); 
+            }
+        }
+
+        // YouTube Iframe API Setup
+        let player;
+        const tag = document.createElement('script');
+        tag.src = "https://www.youtube.com/iframe_api";
+        const firstScriptTag = document.getElementsByTagName('script')[0];
+        firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+        window.onYouTubeIframeAPIReady = function() {
+            player = new YT.Player('audioContainer', {
+                height: '10',
+                width: '10',
+                videoId: 'pCsuDORmx_g',
+                playerVars: {
+                    'autoplay': 1,
+                    'controls': 0,
+                    'disablekb': 1,
+                    'loop': 1,
+                    'playlist': 'pCsuDORmx_g'
+                },
+                events: {
+                    'onReady': function(event) {
+                        event.target.playVideo();
+                    }
+                }
+            });
+        };
+
+        setTimeout(type, 800);
+
+        document.body.addEventListener('click', function() {
+            if (player && typeof player.playVideo === 'function') {
+                player.playVideo();
+            }
+        });
+    </script>
+<script defer src="https://static.cloudflareinsights.com/beacon.min.js/v4513226cdae34746b4dedf0b4dfa099e1781791509496" integrity="sha512-ZE9pZaUXND66v380QUtch/5sE9tPFh2zg45pR2PB0CVkCtOREv2AJKkSidISWkysEuQ0EH8faUU5du78bx87UQ==" data-cf-beacon='{"version":"2024.11.0","token":"64c1efe2a5bc4dadae773f1294c2205c","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>
